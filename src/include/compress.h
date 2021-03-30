@@ -12,6 +12,10 @@ typedef struct __DATA_BUFFER{
 
 
 
+typedef void (*compressor_data_cb_func)(uint8_t c);
+
+
+
 data_buffer_t* create_data_buffer(FILE* f);
 
 
@@ -20,7 +24,15 @@ data_buffer_t* compress_data(data_buffer_t* dt);
 
 
 
+void compress_data_cb(data_buffer_t* dt,compressor_data_cb_func cb);
+
+
+
 data_buffer_t* decompress_data(data_buffer_t* dt);
+
+
+
+void decompress_data_cb(data_buffer_t* dt,compressor_data_cb_func cb);
 
 
 
