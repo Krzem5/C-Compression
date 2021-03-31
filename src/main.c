@@ -9,9 +9,9 @@ int main(int argc,const char** argv){
 	fopen_s(&f,"rsrc/test.txt","rb");
 	data_buffer_t* dt=create_data_buffer(f);
 	fclose(f);
-	data_buffer_t* c_dt=compress_data(dt);
+	data_buffer_t* c_dt=compress_data_bf(dt);
 	printf("%llu -> %llu (%+.2f%%)\n",dt->l,c_dt->l,((float)c_dt->l-dt->l)/dt->l*100);
-	data_buffer_t* d_dt=decompress_data(c_dt);
+	data_buffer_t* d_dt=decompress_data_bf(c_dt);
 	printf("%llu -> %llu (%+.2f%%)\n",c_dt->l,d_dt->l,((float)d_dt->l-c_dt->l)/c_dt->l*100);
 	if (dt->l!=d_dt->l){
 		printf("Length Mismatch!\n");

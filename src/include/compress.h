@@ -5,6 +5,10 @@
 
 
 
+#define COMPRESSOR_END_OF_DATA 256
+
+
+
 typedef struct __DATA_BUFFER{
 	uint64_t l;
 	uint8_t* dt;
@@ -12,7 +16,9 @@ typedef struct __DATA_BUFFER{
 
 
 
-typedef void (*compressor_data_cb_func)(uint8_t c);
+typedef uint16_t (*compressor_data_read_func)(void* ctx);
+typedef void (*compressor_data_reset_read_func)(void* ctx);
+typedef void (*compressor_data_write_func)(void* ctx,uint8_t c);
 
 
 
@@ -20,19 +26,19 @@ data_buffer_t* create_data_buffer(FILE* f);
 
 
 
-data_buffer_t* compress_data(data_buffer_t* dt);
+void compress_data(void* rf_ctx,compressor_data_read_func rf,compressor_data_reset_read_func rrf,void* wf_ctx,compressor_data_write_func wf);
 
 
 
-void compress_data_cb(data_buffer_t* dt,compressor_data_cb_func cb);
+data_buffer_t* compress_data_bf(data_buffer_t* dt);
 
 
 
-data_buffer_t* decompress_data(data_buffer_t* dt);
+void decompress_data(void* rf_ctx,compressor_data_read_func rf,void* wf_ctx,compressor_data_write_func wf);
 
 
 
-void decompress_data_cb(data_buffer_t* dt,compressor_data_cb_func cb);
+data_buffer_t* decompress_data_bf(data_buffer_t* dt);
 
 
 
