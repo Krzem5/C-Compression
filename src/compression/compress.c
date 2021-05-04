@@ -1,10 +1,26 @@
 #include <compress.h>
-#include <intrin.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <stdio.h>
+
+
+
+#ifdef _MSC_VER
+#include <intrin.h>
 #pragma intrinsic(__stosq)
 #pragma intrinsic(_BitScanForward64)
+#define REPEAT_QWORD_COPY(d,s,n) __stosq(d,s,n)
+static inline unsigned long FORWARD_BIT_SCAN64(uint64_t v){
+	unsigned long o;
+	_BitScanForward64(&o,v);
+	return o;
+}
+#else
+static inline void REPEAT_QWORD_COPY(uint64_t* d,uint64_t* s,size_t n){
+	__asm__("rep movsq":"=D"(d),"=S"(s),"=c"(n):"0"(d),"1"(s),"2"(n):"memory");
+}
+#define FORWARD_BIT_SCAN64(v) __builtin_ffs(v)
+#endif
 
 
 
@@ -92,7 +108,7 @@ data_buffer_t* create_data_buffer(FILE* f){
 
 void compress_data(void* rf_ctx,compressor_data_read_func rf,compressor_data_reset_read_func rrf,void* wf_ctx,compressor_data_write_func wf){
 	uint64_t fl[256];
-	__stosq(fl,0,256);
+	REPEAT_QWORD_COPY(fl,0,256);
 	uint16_t ql=0;
 	uint8_t si=0;
 	uint64_t dtl=0;
@@ -113,7 +129,7 @@ void compress_data(void* rf_ctx,compressor_data_read_func rf,compressor_data_res
 	}
 	rrf(rf_ctx);
 	tree_elem_t t[256];
-	__stosq((uint64_t*)t,0,256*sizeof(tree_elem_t)/sizeof(uint64_t));
+	REPEAT_QWORD_COPY((uint64_t*)t,0,256*sizeof(tree_elem_t)/sizeof(uint64_t));
 	uint8_t mx=1;
 	if (ql==1){
 		(t+si)->l=1;
@@ -190,8 +206,7 @@ void compress_data(void* rf_ctx,compressor_data_read_func rf,compressor_data_res
 			for (uint8_t i=0;i<4;i++){
 				uint64_t m=ea.bl[i];
 				while (m){
-					unsigned long j;
-					_BitScanForward64(&j,m);
+					unsigned long j=FORWARD_BIT_SCAN64(m);
 					m&=~(1ull<<j);
 					j+=i*64;
 					t[j].l++;
@@ -205,8 +220,7 @@ void compress_data(void* rf_ctx,compressor_data_read_func rf,compressor_data_res
 				}
 				m=eb.bl[i];
 				while (m){
-					unsigned long j;
-					_BitScanForward64(&j,m);
+					unsigned long j=FORWARD_BIT_SCAN64(m);
 					m&=~(1ull<<j);
 					j+=i*64;
 					t[j].m|=(1ull<<t[j].l);
@@ -340,7 +354,7 @@ void decompress_data(void* rf_ctx,compressor_data_read_func rf,void* wf_ctx,comp
 		ol=(ol<<8)|rf(rf_ctx);
 	}
 	tree_elem_array_t* t=malloc(tl*sizeof(tree_elem_array_t)+(tl+1)*sizeof(uint8_t));
-	__stosq((uint64_t*)t,0,tl*sizeof(tree_elem_array_t)/sizeof(uint64_t));
+	REPEAT_QWORD_COPY((uint64_t*)t,0,tl*sizeof(tree_elem_array_t)/sizeof(uint64_t));
 	uint8_t j=0;
 	while (1){
 		uint8_t l=(uint8_t)rf(rf_ctx);
