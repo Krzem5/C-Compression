@@ -8,9 +8,9 @@
 int main(int argc,const char** argv){
 	FILE* f;
 #ifdef _MSC_VER
-	if (fopen_s(&f,argv[1],"rb")){
+	if (fopen_s(&f,argv[1],"rb")){// lgtm [cpp/path-injection]
 #else
-	if (!(f=fopen(argv[1],"rb"))){
+	if (!(f=fopen(argv[1],"rb"))){// lgtm [cpp/path-injection]
 #endif
 		printf("Unable to Open File!\n");
 	}
